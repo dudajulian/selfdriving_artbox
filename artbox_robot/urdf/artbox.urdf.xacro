@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<robot name="artbox" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="box_length" value="0.3"/>
+  <xacro:property name="box_width" value="0.3"/>
+  <xacro:property name="box_height" value="0.3"/>
+  <xacro:property name="wheel_base" value="0.325"/>
+  <xacro:property name="wheel_raise" value="0.01"/>
+  <xacro:property name="wheel_radius" value="0.1"/>
+  <xacro:property name="wheel_width" value="0.05"/>
+
+  <material name="artbox_body">
+    <color rgba="0.96 0.863 0.545 1.0"/>
+  </material>
+
+  <material name="artbox_wheel">
+    <color rgba="0.756 0.756 0.756 1.0"/>
+  </material>
+
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 ${box_height / 2.0}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${box_length} ${box_width} ${box_height}"/>
+      </geometry>
+      <material name="artbox_body"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 ${box_height / 2.0}" rpy="0 0 0"/>
+      <geometry>
+        <box size="${box_length} ${box_width} ${box_height}"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 ${box_height / 2.0}" rpy="0 0 0"/>
+      <mass value="5.0"/>
+      <inertia ixx="0.05" ixy="0.0" ixz="0.0" iyy="0.05" iyz="0.0" izz="0.05"/>
+    </inertial>
+  </link>
+
+  <link name="left_wheel_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+      <material name="artbox_wheel"/>
+    </visual>
+  </link>
+
+  <link name="right_wheel_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="${wheel_radius}" length="${wheel_width}"/>
+      </geometry>
+      <material name="artbox_wheel"/>
+    </visual>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <origin xyz="0 ${wheel_base / 2.0} ${wheel_raise}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="left_wheel_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <origin xyz="0 ${-wheel_base / 2.0} ${wheel_raise}" rpy="0 0 0"/>
+    <parent link="base_link"/>
+    <child link="right_wheel_link"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <ros2_control name="ArtboxSystem" type="system">
+    <hardware>
+      <plugin>artbox_robot/ArtboxHardwareInterface</plugin>
+      <param name="serial_port">/dev/ttyACM0</param>
+      <param name="baud_rate">115200</param>
+      <param name="ticks_per_rev">2048</param>
+      <param name="wheel_radius">${wheel_radius}</param>
+    </hardware>
+
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity"/>
+      <state_interface name="position"/>
+      <state_interface name="velocity"/>
+    </joint>
+  </ros2_control>
+
+</robot>

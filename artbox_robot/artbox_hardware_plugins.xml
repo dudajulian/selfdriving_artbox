@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<library path="artbox_robot_hardware">
+        <class
+        name="artbox_robot/ArtboxHardwareInterface" 
+        type="ArtboxHardwareInterface" 
+        base_class_type="hardware_interface::SystemInterface">
+                <description>Artbox fake hardware interface</description> 
+        </class>
+</library>
