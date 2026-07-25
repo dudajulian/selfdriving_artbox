@@ -2,6 +2,11 @@
 
 #include <algorithm>
 
+// Smoke test imports
+#include <cmath>
+#include <cstdlib>
+#include <string>
+
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "pluginlib/class_list_macros.hpp"
 #include "rclcpp/rclcpp.hpp"
@@ -106,6 +111,30 @@ hardware_interface::return_type ArtboxHardwareInterface::write(
 	if (!is_active_) {
 		return hardware_interface::return_type::OK;
 	}
+
+  // Assumption for first test:
+  // hw_commands_ are wheel angular velocities [rad/s], map +/-10 rad/s to +/-1023.
+  constexpr double max_wheel_rad_s = 10.0;
+
+  auto to_speed255 = [](double wheel_cmd_rad_s) -> int {
+    const double normalized = std::clamp(wheel_cmd_rad_s / max_wheel_rad_s, -1.0, 1.0);
+    return static_cast<int>(std::lround(normalized * 1023.0));
+  };
+
+  // If your firmware has separate endpoints, use both.
+  // Example assumes left and right endpoints:
+  const int left_speed = to_speed255(hw_commands_[0]);
+  const int right_speed = to_speed255(hw_commands_[1]);
+
+  const std::string left_url =
+    "http://192.168.8.196/motor?speed=" + std::to_string(left_speed);
+  // const std::string right_url =
+    // "http://192.168.8.196/right_motor?speed=" + std::to_string(right_speed);
+
+  // Simple shell curl for testing only (blocking, not production-safe).
+  (void)std::system(("curl -s --max-time 0.2 \"" + left_url + "\" > /dev/null").c_str());
+  // (void)std::system(("curl -s --max-time 0.2 \"" + right_url + "\" > /dev/null").c_str());
+
 
 	// Placeholder write: in a real implementation this would send hw_commands_ to the motor driver.
 	return hardware_interface::return_type::OK;
