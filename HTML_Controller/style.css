@@ -1,0 +1,42 @@
+body{
+    font-family: Arial, sans-serif;
+    text-align:center;
+    margin:40px;
+}
+
+#keyboard{
+
+    margin:40px;
+
+}
+
+.row{
+
+    margin:10px;
+
+}
+
+button{
+
+    width:80px;
+    height:80px;
+    font-size:30px;
+    margin:10px;
+
+}
+
+.status{
+
+    display:flex;
+    justify-content:center;
+    gap:100px;
+
+}
+
+.motor{
+
+    border:1px solid black;
+    padding:20px;
+    width:200px;
+
+}

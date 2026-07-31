@@ -1,0 +1,194 @@
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WebServer.h>
+#include "motor.h"
+#include "encoder.h"
+
+
+
+// ============================
+// Pin definitions
+// ============================
+
+constexpr uint8_t EN_PIN  = D1;   // PWM -> ENA on L298N
+constexpr uint8_t IN1_PIN = D2;   // Direction
+constexpr uint8_t IN2_PIN = D3;   // Direction
+
+constexpr uint8_t ENC_A_PIN = D5;
+constexpr uint8_t ENC_B_PIN = D6;
+
+// ============================
+// WiFi credentials
+// ============================
+
+const char* ssid = "Poolparty";
+const char* password = "q3JBq8G4H5BhG1qg";
+
+// ============================
+// Objects
+// ============================
+
+ESP8266WebServer server(80);
+
+Motor motor(EN_PIN, IN1_PIN, IN2_PIN);
+
+Encoder encoder(ENC_A_PIN, ENC_B_PIN);
+
+// ============================
+// Webpage
+// ============================
+
+void handleRoot()
+{
+    String page = R"rawliteral(
+<!DOCTYPE html>
+<html>
+<head>
+<title>Motor Controller</title>
+<style>
+body{
+    font-family:Arial;
+    text-align:center;
+    margin-top:50px;
+}
+button{
+    width:120px;
+    height:50px;
+    margin:10px;
+    font-size:18px;
+}
+input{
+    width:300px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>NodeMCU Motor Controller</h1>
+
+<h3>Speed</h3>
+
+<input type="range"
+       min="-1023"
+       max="1023"
+       value="0"
+       id="speed"
+       oninput="sendSpeed(this.value)">
+
+<p id="value">0</p>
+
+<button onclick="stopMotor()">STOP</button>
+
+<script>
+
+function sendSpeed(speed)
+{
+    document.getElementById("value").innerHTML = speed;
+
+    fetch("/motor?speed=" + speed);
+}
+
+function stopMotor()
+{
+    document.getElementById("speed").value = 0;
+    document.getElementById("value").innerHTML = 0;
+
+    fetch("/motor?speed=0");
+}
+
+</script>
+
+</body>
+</html>
+)rawliteral";
+
+    server.send(200, "text/html", page);
+}
+
+// ============================
+// Motor endpoint
+// ============================
+
+void handleMotor()
+{
+    if (!server.hasArg("speed"))
+    {
+        server.send(400, "text/plain", "Missing speed parameter");
+        return;
+    }
+
+    int speed = server.arg("speed").toInt();
+
+    speed = constrain(speed, -1023, 1023);
+
+    Serial.print("Requested speed: ");
+    Serial.println(speed);
+
+    motor.setSpeed(speed);
+
+    server.send(200, "text/plain", "OK");
+}
+
+// ============================
+// Setup
+// ============================
+
+void setup()
+{
+    Serial.begin(9600);
+    
+    analogWriteRange(1023);
+    analogWriteFreq(1000);
+
+    motor.begin();
+
+    encoder.begin();
+
+    Serial.println();
+    Serial.println("Connecting to WiFi...");
+
+    WiFi.begin(ssid, password);
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+        Serial.print(".");
+    }
+
+    Serial.println();
+    Serial.println("Connected!");
+
+    Serial.print("IP Address: ");
+    Serial.println(WiFi.localIP());
+
+    server.on("/", handleRoot);
+    server.on("/motor", handleMotor);
+
+    server.begin();
+
+    Serial.println("HTTP Server started");
+}
+
+// ============================
+// Main loop
+// ============================
+void loop()
+{
+    server.handleClient();
+
+    static unsigned long lastPrint = 0;
+
+    if (millis() - lastPrint >= 500)
+    {
+        lastPrint = millis();
+
+        Serial.print("Encoder Count: ");
+        Serial.print(encoder.getCount());
+
+        Serial.print("    Speed: ");
+        Serial.print(encoder.getSpeed());
+
+        Serial.println(" pulses/s");
+    }
+}

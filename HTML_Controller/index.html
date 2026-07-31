@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Differential Drive Controller</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Differential Drive Controller</h1>
+
+<div id="keyboard">
+
+    <div class="row">
+        <button id="key-w">W</button>
+    </div>
+
+    <div class="row">
+        <button id="key-a">A</button>
+        <button id="key-s">S</button>
+        <button id="key-d">D</button>
+    </div>
+
+</div>
+
+<div class="status">
+
+    <div class="motor">
+
+        <h2>LEFT</h2>
+
+        <p>PWM:
+            <span id="leftSpeed">0</span>
+        </p>
+
+        <p>Encoder:
+            <span id="leftEncoder">0</span>
+        </p>
+
+    </div>
+
+    <div class="motor">
+
+        <h2>RIGHT</h2>
+
+        <p>PWM:
+            <span id="rightSpeed">0</span>
+        </p>
+
+        <p>Encoder:
+            <span id="rightEncoder">0</span>
+        </p>
+
+    </div>
+
+</div>
+
+<script src="controller.js"></script>
+
+</body>
+</html>
