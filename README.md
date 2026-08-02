@@ -24,3 +24,78 @@ source install/setup.bash
 ```
 This starts a tmux session that runs the robot interface, rviz2 and keyboard controls for steering. You can switch between the windows of tmux by using `Ctrl+B` and then hitting the number of the window, or close it by hitting `D`.
 Once tmux is closed, it still runs in the background. Make sure to kill it with `tmux kill-session -t artbox` or reenter the session with `tmux attach -t artbox`.
+
+
+## Motor Interface
+
+### Components
+
+| Component | Model | Quantity |
+|-----------|-------|:--------:|
+| Microcontroller | NodeMCU (ESP8266) | 2 |
+| Motor Driver | L298N | 1 |
+| DC Motor | JGA25-370, 12 V | 2 |
+
+The robot is driven by two independent motor controllers. Each NodeMCU controls one DC motor and its corresponding quadrature encoder via a shared L298N motor driver. Two microcontrollers are required because a single NodeMCU does not provide enough GPIOs for controlling both motors and reading both encoders simultaneously.
+
+Connect the hardware according to the L298N and motor datasheets.
+
+### Flashing the Firmware
+
+The PlatformIO project located in `self_driving_artbox_differential_drive` must be flashed to **both** NodeMCUs.
+
+During compilation, select the appropriate PlatformIO environment:
+
+- `left` for the left motor controller
+- `right` for the right motor controller
+
+Each controller is assigned a static IP address.
+
+| Controller | IP Address |
+|-----------|------------|
+| Left | `192.168.8.50` |
+| Right | `192.168.8.51` |
+
+### HTTP Interface
+
+The motor controllers expose a simple HTTP interface.
+
+Example:
+
+**Left motor**
+
+```text
+http://192.168.8.50/motor?speed=700
+```
+
+**Right motor**
+
+```text
+http://192.168.8.51/motor?speed=700
+```
+
+The `speed` parameter accepts values between `-1023` and `1023`, where negative values drive the motor in reverse.
+
+### Wi-Fi Configuration
+
+The Wi-Fi credentials, gateway, and network configuration are defined in
+
+```text
+config.h
+```
+
+Update these settings before flashing the firmware.
+
+---
+
+## Low-Level Motor Controller
+
+For development and debugging without ROS 2, the browser-based controller contained in `HTML_Controller` can be used.
+
+After powering both NodeMCUs:
+
+1. Open `HTML_Controller/index.html` in a web browser.
+2. Control the robot using the **W**, **A**, **S**, and **D** keys.
+3. Observe the current motor commands and encoder counts.
+
+This interface is intended for testing the motor controllers independently of the ROS 2 stack.
